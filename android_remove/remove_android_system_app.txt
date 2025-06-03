@@ -1,0 +1,105 @@
+How to completely uninstall an Android system app?
+Asked 10 years, 9 months ago
+Modified 6 years, 5 months ago
+Viewed 22k times
+ Part of Mobile Development Collective
+3
+
+I am developing an Android system app. For uninstalling it, merely deleting the APK from system/app sometimes does not remove its shared preferences.
+
+So, what is the proper method of completely uninstalling a system app which will ensure that it removes everything associated with this app?
+
+javaandroiduninstallation
+Share
+Improve this question
+Follow
+edited Jan 3, 2019 at 20:09
+TylerH's user avatar
+TylerH
+21.1k8080 gold badges7979 silver badges115115 bronze badges
+asked Aug 14, 2014 at 5:41
+Basher51's user avatar
+Basher51
+1,32922 gold badges1717 silver badges2828 bronze badges
+Are you deleting apk? Which command you are using – 
+Pankaj Kumar
+ CommentedAug 14, 2014 at 6:11 
+@PankajKumar :Using ES file explorer app,going to system/app,selecting my app and just deleting. – 
+Basher51
+ CommentedAug 14, 2014 at 6:13 
+Add a comment
+2 Answers
+Sorted by:
+
+Highest score (default)
+8
+
+It seems you are doing this on a rooted device. So, the below command will do your task:
+
+adb shell rm /system/app/APK_NAME.apk      // Removes apk file from /system/app/ location
+adb shell pm clear com.yourapp.packagename // Removes application data
+It may need a root permission, so before running above commands, you should run the below commands to take root privilege:
+
+adb root
+adb remount
+and then run the above commands.
+
+Share
+Improve this answer
+Follow
+edited Dec 18, 2018 at 15:31
+Alexander Abakumov's user avatar
+Alexander Abakumov
+14.6k1616 gold badges9999 silver badges134134 bronze badges
+answered Aug 14, 2014 at 6:15
+Pankaj Kumar's user avatar
+Pankaj Kumar
+83.1k2929 gold badges171171 silver badges188188 bronze badges
+Should this be executed when the device is running,or can I use this in the recovery mode as well? – 
+Basher51
+ CommentedAug 14, 2014 at 6:22
+when the device is running. – 
+Pankaj Kumar
+ CommentedAug 14, 2014 at 6:31
+1
+What is the difference between adb shell rm + adb shell pm clear combo and adb uninstall? – 
+Alexander Abakumov
+ CommentedDec 18, 2018 at 15:45 
+Add a comment
+6
+
+This is a way to remove/uninstall (not from the phone as it comes back with factory reset) almost ANY app WITHOUT root INCLUDING system apps (hint: the annoying update app that updates your phone line it or not can usually be found by grepping for "ccc")
+
+In order to do this you need to:
+have adb installed
+have usb debugging turned on
+
+a. in the phone go to settings --> system --> about phone --> tap rapidly 7 times on "Build number"
+
+b. in the phone go to settings --> system --> Developer options
+
+c. under "Debugging" turn on "USB debugging"
+
+have the phone connected to via a USB cable
+
+The following example kills the presidential alert app:
+adb shell pm uninstall --user 0 com.android.cellbroadcastreceiver
+It would look like this:
+$ adb shell pm uninstall --user 0 com.android.cellbroadcastreceiver
+Success
+To view users run:
+adb shell pm list users
+you will see something like this:
+$ adb shell pm list users                                                
+Users:
+     UserInfo{0:Owner:13} running
+The first number "0" is the user ID number then seperated by ":" next comes the "name" or username of the user ("Owner" is above example) then after another ":" the group number (13). All you need is the user number/UID "0". It is VERY rare to see more than one user. The Android OS can support > 1 user but I have yet to ever see it used. There may be a few apps you might see a response of "Failed" for but 95%+ you should see "Success".
+
+To list all the apps you can run:
+$ adb shell pm list packages [-f]
+The -f switch is for a "Full" listing which outputs is this format: package://.apk=com.app.name where "package:" is always first followed by the full path to the apk file of the app then followed immediately with "=" then the dotten notated app name - note there are no spaces to the left/right of "=". Below is an example:
+
+package:/system/priv-app/MmsService/MmsService.apk=com.android.mms.service
+package:/data/app/aws.apps.netPortDb-1/base.apk=aws.apps.netPortDb
+package:/oem/priv-app/Ignite/Ignite.apk=com.LogiaGroup.LogiaDeck
+You will notice there are 3 starting directories [/system, /data, /oem] The system apps usually start with /system; apps you install usually start with /data; and apps force installed by who you got the phone through (VZW, ATT, etc) usually start with /oem. While is is not the case 100% of the time is ios very often the way apps are placed.
